@@ -1,0 +1,21 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t oliverloenning/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true oliverloenning/react-test npm test
+
+after_success:
+  - docker build -t oliverloenning/multi-client ./client
+  - docker build -t oliverloenning/multi-nginx ./nginx
+  - docker build -t oliverloenning/multi-server ./server
+  - docker build -t oliverloenning/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push oliverloenning/multi-client
+  - docker push oliverloenning/multi-nginx
+  - docker push oliverloenning/multi-server
+  - docker push oliverloenning/multi-worker
